@@ -3,7 +3,6 @@ name = "reusable_lexer"
 version = "0.1.0"
 edition = "2021"
 description = "Top-down reusable lexer made in rust."
-license = "GPT-3"
 repository = "https://github.com/Choose-a-new-username/reusable_lexer"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
