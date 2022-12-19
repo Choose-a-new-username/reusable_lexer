@@ -29,6 +29,12 @@ enum TokenKind<'a> {
 }
 
 #[derive(Debug, Clone)]
+struct Token<'a> {
+    kind: TokenKind<'a>,
+    position: (usize, usize)
+}
+
+#[derive(Debug, Clone)]
 struct Lexer<'a> {
     source: &'a str,
     prev: char,
@@ -52,7 +58,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn position(&self) -> (usize, usize) {
+    fn pos(&self) -> (usize, usize) {
         (self.row, self.col)
     }
 
@@ -133,12 +139,14 @@ impl<'a> Lexer<'a> {
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = TokenKind<'a>;
+    type Item = Token<'a>;
 
-    fn next(&mut self) -> Option<TokenKind<'a>> {
+    fn next(&mut self) -> Option<Token<'a>> {
         loop {
             self.trim_whitespace();
-            return match self.prev {
+            let position = self.pos();
+
+            let kind = match self.prev {
                 'a'..='z' | 'A'..='Z' | '_' => Some(TokenKind::Ident(self.trim_ident())),
                 '0'..='9' => Some(TokenKind::Num(self.trim_number().parse().unwrap_or(0))),
                 '+' => {
@@ -200,6 +208,12 @@ impl<'a> Iterator for Lexer<'a> {
                     Some(TokenKind::ClosingBracket)
                 },
                 _ => None
+            };
+
+            return if let Some(kind) = kind {
+                Some(Token { kind, position })
+            } else {
+                None
             }
         }
     }
@@ -219,14 +233,10 @@ fn main() {
     for (i, arg) in env::args().enumerate() {
         if i == 0 { continue }
         let file = fs::read_to_string(arg).expect("failed to read file");
-
         let mut lexer: Lexer<'_> = Lexer::new(&file);
-        print!("lexer: ");
-        elapsed!(while let Some(_tok) = lexer.next() {
-            // println!("{:?}: {_tok:?}", lexer.position());
+
+        elapsed!(while let Some(tok) = lexer.next() {
+            println!("{tok:?}");
         });
-        print!("chars: ");
-        elapsed!(for _ in file.chars() {
-        })
     }
 }
